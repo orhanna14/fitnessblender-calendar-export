@@ -1,9 +1,21 @@
-# JSON-to-.ics
+# FitnessBlender Calendar Export
 
-**JSON-file load from:** [javascript.kiev.ua](http://javascript.kiev.ua/attach/icalendar/google_events.json) **usage AJAX request** 
+This project allows you to export FitnessBlender workout schedules to Google Calendar.
 
-You can change this if you specify the path to the JSON-file.  Use the `xhr.open()` method of the **xhr-object**.
+## How It Works
+1. The script fetches workout data from a `workouts.json` file.
+2. It converts the data into an `.ics` file (iCalendar format).
+3. You can import the `.ics` file into Google Calendar.
 
-Remember the correct property names when you create your JSON, see [RFC-Specifications](https://icalendar.org/RFC-Specifications/iCalendar-RFC-5545/)
+## Usage
+1. Clone this repository.
+2. Open `index.html` in your browser.
+3. Click the "Generate .ics File" button to download the calendar file.
+4. Import the `.ics` file into Google Calendar.
 
-As a result, you get a file 'сalendar.ics' with events of your JSON.
+## Requirements
+- A modern web browser.
+- A local server to serve the files (e.g., Python, Node.js, or VS Code Live Server).
+
+## License
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

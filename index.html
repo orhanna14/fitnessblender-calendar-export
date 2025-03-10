@@ -1,12 +1,132 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<title>iCalendar</title>
-	<meta charset="utf-8">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitnessBlender Calendar Export</title>
 </head>
 <body>
+  <h1>FitnessBlender Calendar Export</h1>
+  <p>Click the button below to generate and download the .ics file.</p>
+  <button id="generateButton">Generate .ics File</button>
 
+  <script>
+    const beginICalendar = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//FitnessBlender//Workouts//EN\r\nX-WR-CALNAME;CHARSET=utf-8:FitnessBlender Workouts\r\nMETHOD:PUBLISH\r\n";
+    const endICalendar = "END:VCALENDAR\r\n";
+    const maxLengthProperty = 70;
+    let googleEvents = "";
+    let dtStamp = dtStampGenerate();
 
-<script type="text/javascript" src="js/main.js"></script>
+    document.getElementById("generateButton").addEventListener("click", function () {
+      fetch('./workouts.json') // Fetch the local JSON file
+        .then(response => response.json()) // Parse the JSON response
+        .then(data => {
+          // Process the data here
+          googleEvents = beginICalendar;
+          for (let i = 0; i < data.length; i++) {
+            googleEvents = eventToICalendar(data[i], googleEvents);
+          }
+          googleEvents += endICalendar;
+
+          // Download the .ics file
+          download(googleEvents, "fitnessblender_calendar", "ics");
+        })
+        .catch(error => {
+          console.error("Error fetching or processing the JSON file:", error);
+        });
+    });
+
+    // Function to convert an event to iCalendar format
+    function eventToICalendar(event, googleEvents) {
+      googleEvents += "BEGIN:VEVENT\r\n";
+      googleEvents += "SUMMARY:" + contentLinesRFC(event.title) + "\r\n";
+      googleEvents += "DESCRIPTION:" + contentLinesRFC(event.description) + "\r\n";
+      googleEvents += "DTSTART:" + formatDateTime(event.startDate, event.startTime) + "\r\n";
+      googleEvents += "DTEND:" + formatDateTime(event.startDate, event.endTime) + "\r\n";
+      googleEvents += "UID:" + event.startDate + "-" + event.title.replace(/\s+/g, "-") + "\r\n";
+      googleEvents += "DTSTAMP:" + dtStamp + "\r\n";
+      googleEvents += "END:VEVENT\r\n";
+      return googleEvents;
+    }
+
+    // Function to format date and time for iCalendar
+    function formatDateTime(date, time) {
+      let dateTime = date.replace(/-/g, "") + "T" + time.replace(/:/g, "") + "00";
+      return dateTime;
+    }
+
+    // Function to handle long strings (RFC compliance)
+    function contentLinesRFC(str) {
+      str += "";
+      if (str.byteLength() > maxLengthProperty) {
+        let result = str.slice(0, str.length / 2) + "\r\n ";
+        result += str.slice(str.length / 2, str.length - 1);
+        return result;
+      }
+      return str;
+    }
+
+    // Function to generate the current timestamp in iCalendar format
+    function dtStampGenerate() {
+      let now = new Date();
+      let dateString =
+        now.getFullYear() +
+        ("0" + (now.getMonth() + 1)).slice(-2) +
+        ("0" + now.getDate()).slice(-2) +
+        "T" +
+        ("0" + now.getHours()).slice(-2) +
+        ("0" + now.getMinutes()).slice(-2) +
+        ("0" + now.getSeconds()).slice(-2);
+      return dateString;
+    }
+
+    // Function to download data to a file
+    function download(data, filename, type) {
+      var a = document.createElement("a"),
+        file = new Blob([data], { type: "text/calendar" }); // Use the correct MIME type
+      if (window.navigator.msSaveOrOpenBlob) {
+        // IE10+
+        window.navigator.msSaveOrOpenBlob(file, filename + ".ics");
+      } else {
+        // Other browsers
+        var url = URL.createObjectURL(file);
+        a.href = url;
+        a.download = filename + ".ics"; // Ensure the file has a .ics extension
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () {
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        }, 0);
+      }
+    }
+
+    // Helper function to calculate byte length of a string
+    String.prototype.byteLength = function () {
+      var byteCounts = [127, 2047, 65535, 2097151, 67108863];
+      var str = this,
+        length = str.length,
+        count = 0,
+        i = 0,
+        ch = 0;
+      for (i; i < length; i++) {
+        ch = str.charCodeAt(i);
+        if (ch <= byteCounts[0]) {
+          count++;
+        } else if (ch <= byteCounts[1]) {
+          count += 2;
+        } else if (ch <= byteCounts[2]) {
+          count += 3;
+        } else if (ch <= byteCounts[3]) {
+          count += 4;
+        } else if (ch <= byteCounts[4]) {
+          count += 5;
+        } else {
+          count += 6;
+        }
+      }
+      return count;
+    };
+  </script>
 </body>
 </html>
